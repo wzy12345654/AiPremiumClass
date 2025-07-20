@@ -48,9 +48,9 @@ class Attention(nn.Module):
         super(Attention, self).__init__()
 
     def forward(self, enc_outputs, dec_outputs):
-        s_t = torch.bmm(enc_outputs, dec_outputs.permute(0, 2, 1))
+        s_t = torch.bmm(dec_outputs, enc_outputs.permute(0, 2, 1))
         a_t = torch.softmax(s_t, dim=-1)
-        return torch.bmm(a_t.permute(0, 2, 1), enc_outputs)
+        return torch.bmm(a_t, enc_outputs)
 
 
 class Seq2Seq(nn.Module):

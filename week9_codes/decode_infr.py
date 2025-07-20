@@ -5,6 +5,7 @@ from train import build_vocab, generate_square_subsequent_mask  # 添加这行
 # import pickle
 # import json
 
+# 贪婪解码（所有获取结果中，取概率最大的值）
 def greedy_decode(model, enc_input, enc_vocab, dec_vocab, inv_dec_vocab, device, max_len=20):
     model.eval()
     enc_input = torch.tensor([[enc_vocab.get(t, 0) for t in enc_input]], dtype=torch.long).to(device)
@@ -66,7 +67,7 @@ if __name__ == '__main__':
     model.eval()
 
     # 推理示例
-    test_enc = list("人生得意")
+    test_enc = list("人生得意须尽欢，莫使")
     output = greedy_decode(model, test_enc, enc_vocab, dec_vocab, inv_dec_vocab, device)
     print(f"输入: {''.join(test_enc)}")
     print(f"输出: {output}")

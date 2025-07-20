@@ -3,6 +3,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 import jieba
 import csv
 
+
+"""
+对 doubanbook_top250_comments_single_line.txt 计算TF-IDF并通过余弦相似度给出推荐列表
+"""
+
 # 读取评论数据
 file_path = '/Users/chenxing/AI/AiPremiumClass/陈兴/week05/doubanbook_top250_comments_single_line.txt'
 
@@ -13,7 +18,7 @@ def load_data(file_path):
         for item in reader:
             book = item['book']
             comment = item['body']
-            if book == '' or comment == '':
+            if book == '' or comment == '' or comment is None:
                 continue
             
             # 使用jieba进行中文分词
@@ -25,22 +30,21 @@ def load_data(file_path):
     return book_comments
 
 if __name__ == '__main__':
-
- # 提取书名和评论
+    # 提取书名和评论
     book_comments = load_data(file_path)    
     books = list(book_comments.keys())
-    comments = list(book_comments.values())
+    # 合并每本书的评论为一个字符串
+    comments = [' '.join(c) for c in book_comments.values()]
 
     # 计算TF-IDF矩阵
     # 加载停用词表
-    # 使用绝对路径读取停用词表
     with open('/Users/chenxing/AI/AiPremiumClass/陈兴/week05/stopwords.txt', 'r', encoding='utf-8') as f:
         stop_words = [line.strip() for line in f]
     vectorizer = TfidfVectorizer(stop_words=stop_words)
     tfidf_matrix = vectorizer.fit_transform(comments)
 
     # 计算余弦相似度
-    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+    cosine_sim = cosine_similarity(tfidf_matrix)
 
     # 推荐函数
     def get_recommendations(title, cosine_sim=cosine_sim):
@@ -63,4 +67,4 @@ if __name__ == '__main__':
     recommended_books = get_recommendations("天才在左 疯子在右")
     print("推荐书籍列表:")
     for book, similarity in recommended_books:
-        print(f"{book} - 相似度: {similarity:.4f}")
+        print(f"{book} - 图书评论相似度: {similarity:.4f}")

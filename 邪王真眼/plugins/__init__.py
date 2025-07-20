@@ -15,6 +15,8 @@ from ._plg_tensor_board import TensorBoardPlugin
 from ._plg_log_val_result import LogValResultPlugin
 
 
+from .plg_froze_bert import PluginFrozeBert
+from .plg_peft import PluginPEFT
 from .plg_training_metrics import TrainingMetricsPlugin
 from .plg_val import ValEvaluationPlugin
 from .plg_val_crf import ValCRFEvaluationPlugin

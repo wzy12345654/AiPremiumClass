@@ -8,21 +8,24 @@ from sklearn.model_selection import train_test_split
 from torch.utils.tensorboard import SummaryWriter
 from abc import ABC, abstractmethod
 from typing import Tuple, Dict, Any
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 
 class Config:
     """Centralized configuration management using constants"""
-    TIME_STEPS = 5
-    HIDDEN_SIZE = 2
-    INPUT_SIZE = 2
-    OUTPUT_SIZE = 5
-    NUM_LAYERS = 2
+    TIME_STEPS = 20
+    HIDDEN_SIZE = 64
+    INPUT_SIZE = 1
+    OUTPUT_SIZE = 1
+    NUM_LAYERS = 1
     BATCH_SIZE = 128
-    LEARNING_RATE = 0.001
+    LEARNING_RATE = 0.0005
     EPOCHS = 20
     TEST_SIZE = 0.4
     VAL_TEST_SPLIT = 0.5
     RANDOM_STATE = 41
-    FILE_PATH = r"D:\work\code\practice\home_work\杨文博\week06\weather_data\Summary of Weather.csv"
+    FILE_PATH = r"D:\work\code\practice\home_work\杨文博\week06\Summary of Weather.csv"
 
 
 class IDataLoader(ABC):
@@ -88,9 +91,37 @@ class WeatherDataLoader(IDataLoader):
     def load_data(self) -> Tuple[DataLoader, DataLoader, DataLoader]:
         """Load and preprocess data"""
         weather_data = pd.read_csv(self.file_path, low_memory=False)
-        max_temp = weather_data['MaxTemp']
-        X, y = self._preprocess_data(max_temp)
-        return self._create_dataloaders(X, y)
+        grouped = weather_data.groupby('STA')['MaxTemp']
+        # Initialize empty lists to accumulate X and y
+        X_all_list, y_all_list = [], []
+
+        # Iterate over the groups
+        for sta, series in grouped:
+            # Ensure series is a pandas Series (not DataFrame)
+            series = series.squeeze()  # Converts from DataFrame to Series, if needed
+            series = series[series >= -10]
+            if len(series) <= Config.TIME_STEPS * Config.INPUT_SIZE:
+                continue
+            # plt.figure(figsize=(10, 4))
+            # plt.plot(series.index, series.values, marker='o', linestyle='-', color='blue')
+            # plt.title(f"MaxTemp Time Series for STA {sta}")
+            # plt.xlabel("Time Index")
+            # plt.ylabel("Max Temperature")
+            # plt.grid(True)
+            # plt.tight_layout()
+            # plt.show(block=False)
+
+            # Preprocess the data
+            X, y = self._preprocess_data(series)
+
+            # Append results to lists
+            X_all_list.append(X)
+            y_all_list.append(y)
+        print(len(y_all_list))
+        # Concatenate all data at once
+        X_all = np.concatenate(X_all_list, axis=0)
+        y_all = np.concatenate(y_all_list, axis=0)
+        return self._create_dataloaders(X_all, y_all)
 class IModel(ABC):
     """Abstract base class for models"""
 
@@ -120,14 +151,12 @@ class WeatherRNN(IModel, nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model"""
-        # Initialize hidden state
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
 
         # RNN forward pass
-        out, _ = self.rnn(x, h0)
+        out, _ = self.rnn(x)
 
         # Select last time step output
-        out = out[:, -1, :]
+        out = out[:, -1]
 
         # Fully connected layer
         out = self.fc(out)
@@ -153,13 +182,11 @@ class RNNTrainer(ITrainer):
             train_loader: DataLoader,
             val_loader: DataLoader,
             writer: SummaryWriter,
-            device: torch.device
     ):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.writer = writer
-        self.device = device
         self.criterion = nn.MSELoss()
         self.optimizer = optim.Adam(model.parameters(), lr=Config.LEARNING_RATE)
 
@@ -169,7 +196,7 @@ class RNNTrainer(ITrainer):
         total_loss = 0.0
 
         for batch_x, batch_y in self.train_loader:
-            batch_x, batch_y = batch_x.to(self.device), batch_y.to(self.device)
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             batch_y = batch_y.reshape(-1, Config.OUTPUT_SIZE)
 
             # Forward pass
@@ -206,7 +233,7 @@ class RNNTrainer(ITrainer):
 
         with torch.no_grad():
             for batch_x, batch_y in self.val_loader:
-                batch_x, batch_y = batch_x.to(self.device), batch_y.to(self.device)
+                batch_x, batch_y = batch_x.to(device), batch_y.to(device)
                 batch_y = batch_y.reshape(-1, Config.OUTPUT_SIZE)
 
                 outputs = self.model(batch_x)
@@ -218,10 +245,9 @@ class Experiment:
     """Orchestrates the entire experiment"""
 
     def __init__(self, data_loader: IDataLoader, model: IModel):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.writer = SummaryWriter('runs/weather_rnn_experiment')
         self.data_loader = data_loader
-        self.model = model.to(self.device)
+        self.model = model
 
     def run(self):
         """Run the complete experiment"""
@@ -229,10 +255,14 @@ class Experiment:
         train_loader, val_loader, test_loader = self.data_loader.load_data()
 
         # Train model
-        trainer = RNNTrainer(self.model, train_loader, val_loader, self.writer, self.device)
+        trainer = RNNTrainer(self.model, train_loader, val_loader, self.writer)
         trainer.train()
 
         # Clean up
         self.writer.close()
-experiment = Experiment(WeatherDataLoader(Config.FILE_PATH), WeatherRNN())
-experiment.run()
+
+if __name__ == '__main__':
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = WeatherRNN().to(device)
+    experiment = Experiment(WeatherDataLoader(Config.FILE_PATH), model)
+    experiment.run()

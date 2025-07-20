@@ -53,11 +53,15 @@ class MyDataset(Dataset):
 def collate_fn(batch):
     enc_batch, dec_batch = zip(*batch)
     enc_batch = pad_sequence(enc_batch, batch_first=True, padding_value=0)
-    dec_batch = pad_sequence(dec_batch, batch_first=True, padding_value=0)
+    
     # dec_in: 去掉最后一个
-    dec_in = dec_batch[:, :-1]
+    dec_in = [dec[:-1] for dec in dec_batch]
     # dec_out: 去掉第一个
-    dec_out = dec_batch[:, 1:]
+    dec_out = [dec[1:] for dec in dec_batch]
+    
+    dec_in = pad_sequence(dec_in, batch_first=True, padding_value=0)
+    # dec_out: 去掉第一个
+    dec_out = pad_sequence(dec_out, batch_first=True, padding_value=0)
     return enc_batch, dec_in, dec_out
 
 # 4. mask
@@ -102,6 +106,7 @@ if __name__ == '__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = Seq2SeqTransformer(d_model, nhead, num_enc_layers, num_dec_layers, dim_forward, dropout, enc_voc_size, dec_voc_size).to(device)
+    
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     loss_fn = torch.nn.CrossEntropyLoss(ignore_index=0)
 

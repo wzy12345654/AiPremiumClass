@@ -67,35 +67,35 @@ class BatchDataProcessor:
 
 
 if __name__ == '__main__':
-    # # 读数据
-    # enc_docs, dec_docs = read_data()
-    #
-    # # 构建词汇表
-    # enc_vocab = Vocabulary.build_vocab(enc_docs)
-    # dec_vocab = Vocabulary.build_vocab(dec_docs)
-    #
-    # # 编码+解码(构成训练样本)
-    # dataset = list(zip(enc_docs, dec_docs))
-    #
-    # batch_processor = BatchDataProcessor(enc_vocab.vocab, dec_vocab.vocab)
-    # # DataLoader
-    # dl = DataLoader(dataset, batch_size=64, shuffle=True, collate_fn=batch_processor.get_word_idx)
-    # # for batch in dl:
-    # #     print(batch)
-    # #     break
-    #
-    # # 数据集缓存
-    # with open('encode.json', 'w', encoding='utf-8') as f:
-    #     json.dump(enc_docs, f)
-    #
-    # with open('decoder.json', 'w', encoding='utf-8') as f:
-    #     json.dump(dec_docs, f)
-    #
-    # # 词典表保存
-    # with open('vocab.bin', 'wb') as f:
-    #     pickle.dump((enc_vocab, dec_vocab), f)
+    # 读数据
+    enc_docs, dec_docs = read_data()
 
-    with open('vocab.bin', 'rb') as f:
-        enc_vocab, dec_vocab = pickle.load(f)
-    print(enc_vocab)
+    # 构建词汇表
+    enc_vocab = Vocabulary.build_vocab(enc_docs)
+    dec_vocab = Vocabulary.build_vocab(dec_docs)
+
+    # 编码+解码(构成训练样本)
+    dataset = list(zip(enc_docs, dec_docs))
+
+    batch_processor = BatchDataProcessor(enc_vocab.vocab, dec_vocab.vocab)
+    # DataLoader
+    dl = DataLoader(dataset, batch_size=64, shuffle=True, collate_fn=batch_processor.get_word_idx)
+    # for batch in dl:
+    #     print(batch)
+    #     break
+
+    # 数据集缓存
+    with open('encode.json', 'w', encoding='utf-8') as f:
+        json.dump(enc_docs, f)
+
+    with open('decoder.json', 'w', encoding='utf-8') as f:
+        json.dump(dec_docs, f)
+
+    # 词典表保存
+    with open('vocab.bin', 'wb') as f:
+        pickle.dump((enc_vocab, dec_vocab), f)
+
+    # with open('vocab.bin', 'rb') as f:
+    #     enc_vocab, dec_vocab = pickle.load(f)
+    # print(enc_vocab)
     # print(dec_vocab)

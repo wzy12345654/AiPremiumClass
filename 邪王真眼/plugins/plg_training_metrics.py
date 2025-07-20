@@ -56,12 +56,17 @@ class TrainingMetricsPlugin(PluginBase):
         acc = self.correct_data / self.total_data
         self.correct_data = self.total_data = 0
         
+        train_time = None
+        if self.check_key(ctx.workspace, 'train_time'):
+            train_time = ctx.workspace['train_time']
+        
         msg = {
             "mode": "train",
             "epoch": ctx.epoch + 1,
             "lr": round(ctx.optimizer.param_groups[0]['lr'], 6),
             "loss": round(avg_loss, 6),
             "acc": round(acc, 6),
+            "train_time": train_time,
         }
 
         ctx.workspace['train_acc'] = acc

@@ -7,6 +7,7 @@ from typing import List, Tuple, Any
 from tqdm import tqdm
 import re
 import sentencepiece as spm
+from collections import Counter
 
 
 class Config:
@@ -28,7 +29,7 @@ class Config:
     # 训练配置
     BATCH_SIZE = 64  # 批量大小
     LEARNING_RATE = 0.001  # 学习率
-    NUM_EPOCHS = 20  # 训练轮数
+    NUM_EPOCHS = 5  # 训练轮数
     EARLY_STOPPING = 3  # 早停轮数（验证集损失不下降时）
 
     # 其他配置
@@ -76,13 +77,22 @@ class JiebaClassifier:
             words = [word for word in words if word.strip()]
             word_lists.append(words)
 
+        all_words = [word for words in word_lists for word in words]
+        word_freq = Counter(all_words)
+        top_words = set([word for word, _ in word_freq.most_common(8000)])
+
+        filtered_word_lists = [
+            [word for word in words if word in top_words]
+            for words in word_lists
+        ]
+
         # 向量化处理标签
-        labels = [0 if star < 4 else 1 for star in stars]
+        labels = [1 if star == 5 else 0 for star in stars]
 
         # 组合并过滤结果
         return [
             (words, label)
-            for words, label in zip(word_lists, labels)
+            for words, label in zip(filtered_word_lists, labels)
             if Config.MIN_WORDS <= len(words) <= Config.MAX_WORDS
         ]
 
@@ -136,7 +146,7 @@ class SentencePieceClassifier:
             word_lists.append(pieces)
 
         # 标签转换
-        labels = [0 if star < 4 else 1 for star in stars]
+        labels = [1 if star == 5 else 0 for star in stars]
 
         # 过滤结果
         return [

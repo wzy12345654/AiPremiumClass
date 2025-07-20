@@ -18,7 +18,9 @@ class TrainingMetricsSeq2SeqPlugin(PluginBase):
     def cal_acc(self, ctx: TrainContext):
         label = ctx.labels
         outputs = ctx.outputs['out']
-        pad_token_id = ctx.train_loader.dataset.vocab["<PAD>"]
+        pad_token_id = ctx.train_loader.dataset.vocab.get("<PAD>", None)
+        if pad_token_id is None:
+            pad_token_id = ctx.train_loader.dataset.vocab.get("[PAD]", None)
 
         mask = (label != pad_token_id)
         

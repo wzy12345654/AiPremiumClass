@@ -12,8 +12,11 @@ class ModelType(Enum):
     CBOW = 'cbow'
     SkipGram = 'skip_gram'
     CNN = 'cnn'
-    BertClassifier = 'bert_classifier'
+    BERT_CLASSIFIER_CRF = 'bert_classifier_crf'
     SIMPLE_ATTENTION = 'simple_attention'
+    BERT_PREDICTOR = 'bert_predictor'
+    MY_TRANSFORMER = 'my_transformer'
+    BERT_CLASSIFIER = 'bert_classifier'
 
     @classmethod
     def from_str(cls, label: str) -> "ModelType":
@@ -52,12 +55,21 @@ def get_model(cfg: Dict[str, Any]):
     elif model_type == ModelType.CNN:
         from .cnn import CNN
         model = CNN(cfg)
-    elif model_type == ModelType.BertClassifier:
-        from .bert_classifier import BertClassifier
-        model = BertClassifier(cfg)
+    elif model_type == ModelType.BERT_CLASSIFIER_CRF:
+        from .bert_classifier_crf import BertClassifierCRF
+        model = BertClassifierCRF(cfg)
     elif model_type == ModelType.SIMPLE_ATTENTION:
         from .simple_attention import SimpleAttention
         model = SimpleAttention(cfg)
+    elif model_type == ModelType.BERT_PREDICTOR:
+        from .bert_predictor import BertPredictor
+        model = BertPredictor(cfg)
+    elif model_type == ModelType.MY_TRANSFORMER:
+        from .my_transformer import MyTransformer
+        model = MyTransformer(cfg)
+    elif model_type == ModelType.BERT_CLASSIFIER:
+        from .bert_classifier import BertClassifier
+        model = BertClassifier(cfg)
     
     if torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)

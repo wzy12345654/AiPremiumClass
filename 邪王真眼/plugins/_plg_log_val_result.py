@@ -17,7 +17,7 @@ class LogValResultPlugin(PluginBase):
         outputs = ctx.outputs
         bs = labels.size(0)
 
-        self.correct_data += (outputs.argmax(dim=1) == labels).sum().item()
+        self.correct_data += (outputs['out'].argmax(dim=1) == labels).sum().item()
         self.total_data += bs
 
     def log(self, ctx: PredictContext):

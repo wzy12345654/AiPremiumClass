@@ -1,0 +1,17 @@
+导入库
+定义超参数（LR，epochs，batch_size）
+数据集加载（train_data,test_data）
+数据加载器（DataLoader（）封装batch_size）
+模型创建nn.Sequential（输入层，隐藏，激活函数，输出）
+交叉熵损失nn.CrossEntropyLoss()
+优化器torch.optim.SGD
+
+训练模型：提取训练数据，前向传播model（），计算损失，梯度清零optimizer.zero_grad()
+loss.backward() #反向传播 	optimizer.step() #更新参数
+
+模型推理：DataLoader（）封装batch_size，
+清零正确数和总数
+with.no_grad()不计算梯度
+提取测试数据
+前向传播model（），去概率最大的类别 更新参数（累加计算正确的数和总数）
+计算准确率

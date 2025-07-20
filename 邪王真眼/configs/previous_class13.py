@@ -1,0 +1,25 @@
+from models.models import ModelType
+from datasets.datasets import DatasetType
+from plugins.plg_peft import TuningTactics
+from models.optimizers.optimizers import OptimizerType
+
+
+config = dict(
+    model = ModelType.BERT_CLASSIFIER_CRF,
+    input_size = 128,
+    hidden_size = 256,
+    num_layers = 3,
+    dropout = 0.1,
+
+    dataset = DatasetType.NER,
+    batch_size = 8,
+    data_root = './邪王真眼/datasets/corpus_p9',
+    max_length = 100,
+
+    optimizer = OptimizerType.Adam,
+    lr = 0.0001,
+
+    epochs = 10,
+    result_path = './邪王真眼/previous_class13/result',
+    tuning_tactics = TuningTactics.LORA_TUNING
+)

@@ -34,7 +34,9 @@ class ValEvaluationSeq2SeqPlugin(PluginBase):
         total_loss = 0.0
         tot_correct = 0
         total_valid_tokens = 0
-        pad_token_id = val_loader.dataset.vocab["<PAD>"] 
+        pad_token_id = ctx.val_loader.dataset.vocab.get("<PAD>", None)
+        if pad_token_id is None:
+            pad_token_id = ctx.val_loader.dataset.vocab.get("[PAD]", None)
 
         with torch.no_grad():
             for batch_data in val_loader:

@@ -1,0 +1,6 @@
+#### 第十周作业
+
+1. 根据提供的kaggle JD评论语料进行文本分类训练
+https://www.kaggle.com/datasets/dosonleung/jd_comment_with_label
+2. 调整模型训练参数，添加tensorboard跟踪，对比bert冻结和不冻结之间的训练差异。
+3. 保存模型进行分类预测。

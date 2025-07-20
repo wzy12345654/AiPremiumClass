@@ -85,5 +85,8 @@ if __name__ == '__main__':
         enc_tokens.append(enc)
         dec_tokens.append(dec)
 
+    print(enc_tokens)
+    print(dec_tokens)
+
 
 

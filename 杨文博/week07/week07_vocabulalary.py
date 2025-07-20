@@ -60,16 +60,18 @@ def label_pipeline(label):
     return int(label)
 
 
-def collate_batch(batch):
-    label_list, text_list = [], []
-    for (commet, label) in batch:
-        label_list.append(label_pipeline(label))
-        processed_text = torch.tensor(text_pipeline(commet, vocab.word2index), dtype=torch.int64)
-        text_list.append(processed_text)
+def build_collate(word2index):
+    def collate_batch(batch):
+        label_list, text_list = [], []
+        for (comment, label) in batch:
+            label_list.append(label_pipeline(label))
+            processed_text = torch.tensor(text_pipeline(comment, word2index), dtype=torch.int64)
+            text_list.append(processed_text)
 
-    label_list = torch.tensor(label_list, dtype=torch.int64)
-    text_list = pad_sequence(text_list, batch_first=True, padding_value=vocab.word2index['<PAD>'])
-    return text_list, label_list
+        label_list = torch.tensor(label_list, dtype=torch.int64)
+        text_list = pad_sequence(text_list, batch_first=True, padding_value=word2index['<PAD>'])
+        return text_list, label_list
+    return collate_batch
 
 
 if __name__ == '__main__':
@@ -78,14 +80,27 @@ if __name__ == '__main__':
     vocab.load_build(Config.SP_PATH)
 
     # 2. 准备数据
-    with open(Config.JIEBA_DATA_PATH, 'rb') as f:
+    with open(Config.SP_PATH, 'rb') as f:
         comments_data = pickle.load(f)
 
-    dataloader = DataLoader(
-        comments_data,
+    # 3. Split data into train and test sets
+    train_size = int(0.8 * len(comments_data))  # 80% for training
+    test_size = len(comments_data) - train_size
+    train_data, test_data = torch.utils.data.random_split(comments_data, [train_size, test_size])
+
+    # 4. Create data loaders
+    train_loader = DataLoader(
+        train_data,
         batch_size=Config.BATCH_SIZE,
         shuffle=True,
-        collate_fn=collate_batch
+        collate_fn=build_collate(vocab.word2index)
+    )
+
+    test_loader = DataLoader(
+        test_data,
+        batch_size=Config.BATCH_SIZE,
+        shuffle=False,  # No need to shuffle test data
+        collate_fn=build_collate(vocab.word2index)
     )
 
     # 5. 初始化模型
@@ -93,7 +108,7 @@ if __name__ == '__main__':
         vocab_size=len(vocab.word2index),
         embedding_dim=Config.EMBEDDING_DIM,
         hidden_size=Config.HIDDEN_SIZE,
-        num_classes= 2
+        num_classes=2
     ).to(device)
 
     # 6. 训练配置
@@ -103,21 +118,56 @@ if __name__ == '__main__':
     # 7. 训练循环
     print("开始训练...")
     for epoch in range(Config.NUM_EPOCHS):
-        total_loss = 0
-        total_correct = 0
-        total_samples = 0
-
         model.train()
-        for texts, labels in dataloader:
+        train_loss = 0
+        train_correct = 0
+        train_total = 0
+
+        # Training phase
+        for texts, labels in train_loader:
             texts = texts.to(device)
             labels = labels.to(device)
+
             optimizer.zero_grad()
             outputs = model(texts)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
 
-            print(loss.item())
+            train_loss += loss.item()
+            _, predicted = torch.max(outputs.data, 1)
+            train_total += labels.size(0)
+            train_correct += (predicted == labels).sum().item()
+
+        # Validation phase
+        model.eval()
+        val_loss = 0
+        val_correct = 0
+        val_total = 0
+
+        with torch.no_grad():
+            for texts, labels in test_loader:
+                texts = texts.to(device)
+                labels = labels.to(device)
+
+                outputs = model(texts)
+                loss = criterion(outputs, labels)
+
+                val_loss += loss.item()
+                _, predicted = torch.max(outputs.data, 1)
+                val_total += labels.size(0)
+                val_correct += (predicted == labels).sum().item()
+
+        # Print statistics
+        train_loss = train_loss / len(train_loader)
+        train_acc = 100 * train_correct / train_total
+        val_loss = val_loss / len(test_loader)
+        val_acc = 100 * val_correct / val_total
+
+        print(f'Epoch {epoch + 1}/{Config.NUM_EPOCHS}:')
+        print(f'Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}%')
+        print(f'Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.2f}%')
+        print('-' * 50)
 
 
 

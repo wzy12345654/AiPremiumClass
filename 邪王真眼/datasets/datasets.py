@@ -18,6 +18,10 @@ class DatasetType(Enum):
     NER = "ner"
     Weather = "weather"
     COUPLET = "couplet"
+    NextWordPrediction = "NextWordPrediction"
+    QA = "qa"
+    QA_ENCODER_DECODER = "qa_encoder_decoder"
+    JD_COMMENTS = "jd_comments"
 
     @classmethod
     def from_str(cls, label: str) -> "DatasetType":
@@ -96,6 +100,22 @@ def get_dataset(cfg: Dict[str, Any]):
         train_dataset = Couplet('train', cfg)
         val_dataset = Couplet('val', cfg)
         collate_fn = Couplet.collate_fn
+    elif dataset_type == DatasetType.NextWordPrediction:
+        from .corpus_p10.generator import NextWordPrediction
+        train_dataset = NextWordPrediction('train', cfg)
+        val_dataset = NextWordPrediction('val', cfg)
+    elif dataset_type == DatasetType.QA:
+        from .corpus_p11.generator import QA
+        train_dataset = QA('train', cfg)
+        val_dataset = QA('val', cfg)
+    elif dataset_type == DatasetType.QA_ENCODER_DECODER:
+        from .corpus_p11.generator_en_de import QA
+        train_dataset = QA('train', cfg)
+        val_dataset = QA('val', cfg)
+    elif dataset_type == DatasetType.JD_COMMENTS:
+        from .jd_comments.generator import JDComments
+        train_dataset = JDComments('train', cfg)
+        val_dataset = JDComments('val', cfg)
     
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, drop_last=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
