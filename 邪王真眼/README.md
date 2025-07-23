@@ -42,3 +42,4 @@
 | 第十三周 | LLM模型prompt开发及大模型应用 | 1. 安装ollama，下载模型并用代码方式调用；<br>2. 利用OpenAI API 调用远端大模型API，调试参数观察输出结果的差异；<br>3. 利用大模型提示词设计一个智能图书管理AI；<br>功能:实现图书借阅和归还。根据喜好为读者推荐图书。 |
 | 第十四周 | LangChain及RAG原理 | 1. 通过langchain实现特定主题聊天系统，支持多轮对话。<br>2. 借助langchain实现图书管理系统开发扩展，通过图书简介为借阅读者提供咨询。 |
 | 第十五周 | RAG相关技术及Agent应用 | 1. 根据课堂RAG示例，完成外部文档导入并进行RAG检索的过程。<br>外部PDF文档：https://storage.googleapis.com/deepmind-media/Era-of-Experience%20/The%20Era%20of%20Experience%20Paper.pdf<br># 使用 langchain_community.document_loaders.PDFMinerLoader 加载 PDF 文件。<br>docs = PDFMinerLoader(path).load()<br>2. 使用graphrag构建一篇小说（自主选择文档）的RAG知识图，实现本地和全局问题的问答。（截图代码运行结果） |
+| 第十六周 | GPT系列模型搭建训练及优化 | 1. 使用langchain_agent实现pdf和TAVILY工具组合动态调用的实现。<br>2. 使用nano-gpt2.0模型，训练一份中文语料并测试生成。 |
